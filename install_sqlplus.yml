@@ -1,0 +1,8 @@
+- name: Transfer and execute a script.
+  hosts: dmone
+  become: true
+  tasks:
+   - name: Transfer the script
+     copy: src=sqlplus.sh dest=/home/opc mode=0777
+   - name: Execute the script
+     command: sh /home/opc/sqlplus.sh

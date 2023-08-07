@@ -1,0 +1,54 @@
+---
+  - hosts: apex_new_db
+    gather_facts: yes
+    become: true 
+
+    vars:
+      CONTAINER_NAME: "pdb1"
+      APEX_ARCHIVE: "apex_23.1.zip"
+      APEX_DEST_LOCATION: "/u01/app/oracle"
+      APEX_TABLESPACE: "APEX_TABSPACE"
+      APEX_TABLESPACE_DATA_FILE: "xe_apex_tabspace_01.dat"
+      APEX_PUBLIC_USER_PASSWORD: "DEVdbfor_#123"
+      APEX_LISTENER_PASSWORD: "DEVdbfor_#123"
+      APEX_REST_PUBLIC_USER_PASSWORD: "DEVdbfor_#123"
+      APEX_ADMIN_USER: "ADMIN"
+      APEX_ADMIN_USER_EMAIL_ADDRESS: "saivershith.vupallancha@eappsys.com"
+      APEX_ADMIN_USER_PASSWORD: "DEVdbfor_#123"
+      APEX_ADMIN_USER_PRIVILEGES: "ADMIN"
+      ORACLE_USER: "oracle"
+      ORACLE_GROUP: "oinstall"
+      connection_string: "sys/DEVdbfor_#123@//10.0.0.34:1521/pdb1.sub08041135160.dmvcn.oraclevcn.com"
+      
+    tasks:
+              
+      - name: Ensures "{{ APEX_DEST_LOCATION }}" exists
+        file:
+          path: "{{ APEX_DEST_LOCATION }}"
+          state: directory
+          owner: "{{ ORACLE_USER }}"
+          group: "{{ ORACLE_GROUP }}"
+          mode: 0755
+        tags: [install,apex]
+      
+      - name: Unarchive the file to the apex directory
+        unarchive:
+          src: "/home/opc/Final_ords_Automate/apex_23.1.zip"
+          dest: "{{ APEX_DEST_LOCATION }}"
+          owner: "{{ ORACLE_USER }}"
+          group: "{{ ORACLE_GROUP }}"
+        tags: [install,apex]
+
+      - name: Copy file with owner and permissions
+        ansible.builtin.copy:
+          src: /home/opc/Final_ords_Automate/apex_install.sh.j2
+          dest: /usr/local/bin/apex_install.sh
+          owner: "{{ ORACLE_USER }}"
+          group: "{{ ORACLE_GROUP }}"
+          mode: "0755"
+
+      - name: Run the APEX Installation script
+        command: chdir="{{ APEX_DEST_LOCATION }}/apex" /usr/local/bin/apex_install.sh
+        become: true
+        become_user: "{{ ORACLE_USER }}"
+        tags: [install,apex]
